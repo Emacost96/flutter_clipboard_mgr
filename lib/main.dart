@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_clipboard_mgr/pages/home_page.dart';
+import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {

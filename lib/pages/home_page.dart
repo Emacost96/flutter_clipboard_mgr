@@ -1,5 +1,7 @@
+import 'package:clipboard_watcher/clipboard_watcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_clipboard_mgr/components/clipboard_item.dart';
 import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
@@ -11,31 +13,58 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with ClipboardListener {
   late TextEditingController _searchBarController;
   String clipboardLatestValue = '';
+  ClipboardService clipboardService = ClipboardService();
 
   @override
   void initState() {
     super.initState();
-    _getClipboardLatesValue();
+    _getClipboardFirstValue();
     _searchBarController = TextEditingController();
+    clipboardWatcher.addListener(this);
+    // start watch
+    clipboardWatcher.start();
   }
 
   @override
   void dispose() {
     super.dispose();
+    clipboardWatcher.removeListener(this);
+    // stop watch
+    clipboardWatcher.stop();
+
     _searchBarController.dispose();
   }
 
-  void _getClipboardLatesValue() async {
-    String? data = await ClipboardService().getClipboardData();
+  void _getClipboardFirstValue() async {
+    String? data = await clipboardService.getCurrentClipboardData();
     setState(() {
       clipboardLatestValue = data?.toString() ?? '';
+      clipboardService
+          .addToClipboardData(ClipboardData(text: clipboardLatestValue));
     });
   }
 
+  void removeClipboardItem(ClipboardData data) {
+    clipboardService.removeFromClipboardData(data);
+    setState(() {});
+  }
+
   @override
+  void onClipboardChanged() async {
+    ClipboardData? newClipboardData =
+        await Clipboard.getData(Clipboard.kTextPlain);
+
+    setState(() {
+      clipboardLatestValue = newClipboardData?.text ?? '';
+    });
+    if (newClipboardData == null) return;
+
+    clipboardService.addToClipboardData(newClipboardData);
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromARGB(121, 48, 48, 48),
@@ -62,7 +91,20 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         SizedBox(height: 20),
-        ClipboardItem(text: clipboardLatestValue)
+        Expanded(
+          child: ListView.builder(
+            itemCount: clipboardService.getClipboardData().length,
+            itemBuilder: (context, index) {
+              ClipboardData data = clipboardService.getClipboardData()[index];
+              return ClipboardItem(
+                text: data.text!,
+                removeClipboardItem: () {
+                  removeClipboardItem(data);
+                },
+              );
+            },
+          ),
+        )
       ]),
     );
   }

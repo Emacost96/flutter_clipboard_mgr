@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  clipboard_watcher
   irondash_engine_context
   screen_retriever
   super_native_extensions

@@ -1,7 +1,11 @@
+import 'package:clipboard_watcher/clipboard_watcher.dart';
+import 'package:flutter/services.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
 class ClipboardService {
-  Future<String?> getClipboardData() async {
+  List<ClipboardData> _clipboardData = [];
+
+  Future<String?> getCurrentClipboardData() async {
     final clipboard = SystemClipboard.instance;
     if (clipboard == null) {
       return ''; // Clipboard API is not supported on this platform.
@@ -14,9 +18,17 @@ class ClipboardService {
     }
   }
 
-  void ListenToCopyEvents() {
-    registerCopEventListner((String text) {
-      print('Copied text: $text');
-    });
+  List<ClipboardData> getClipboardData() {
+    return _clipboardData;
+  }
+
+  void addToClipboardData(ClipboardData data) {
+    // Add to clipboard data
+    _clipboardData.add(data);
+  }
+
+  void removeFromClipboardData(ClipboardData data) {
+    // Remove from clipboard data
+    _clipboardData.remove(data);
   }
 }

@@ -12,6 +12,7 @@ dependencies:
   window_manager: ^0.3.8
   cupertino_icons:
   super_clipboard:
+  clipboard_watcher: ^0.2.0
 
 dev_dependencies:
   flutter_test:

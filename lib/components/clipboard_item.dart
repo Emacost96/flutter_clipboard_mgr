@@ -4,7 +4,10 @@ import 'package:flutter/widgets.dart';
 
 class ClipboardItem extends StatelessWidget {
   final String text;
-  const ClipboardItem({super.key, required this.text});
+
+  void Function() removeClipboardItem;
+  ClipboardItem(
+      {super.key, required this.text, required this.removeClipboardItem});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +39,9 @@ class ClipboardItem extends StatelessWidget {
                         Row(
                           children: [
                             IconButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                removeClipboardItem();
+                              },
                               icon: Icon(CupertinoIcons.delete,
                                   color: Colors.grey[300]),
                             ),
