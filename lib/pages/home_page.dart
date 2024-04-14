@@ -29,9 +29,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _getClipboardLatesValue() async {
-    String data = await ClipboardService().getClipboardData();
+    String? data = await ClipboardService().getClipboardData();
     setState(() {
-      clipboardLatestValue = data;
+      clipboardLatestValue = data?.toString() ?? '';
     });
   }
 

@@ -10,7 +10,6 @@ void main() async {
       size: Size(800, 500),
       maximumSize: Size(800, 500),
       minimumSize: Size(800, 500),
-      center: true,
       titleBarStyle: TitleBarStyle.hidden,
       windowButtonVisibility: false,
       backgroundColor: Colors.transparent,
