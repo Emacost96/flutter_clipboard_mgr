@@ -7,7 +7,7 @@ import 'package:flutter_clipboard_mgr/components/clipboard_item.dart';
 import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -15,14 +15,20 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with ClipboardListener {
   late TextEditingController _searchBarController;
+  late ScrollController _scrollController;
   String clipboardLatestValue = '';
   ClipboardService clipboardService = ClipboardService();
+  List<ClipboardData> filteredClipboardData = [];
 
   @override
   void initState() {
     super.initState();
     _getClipboardFirstValue();
     _searchBarController = TextEditingController();
+    filteredClipboardData = clipboardService.getClipboardData();
+    _searchBarController.addListener(_onSearchBarChange);
+    _scrollController = ScrollController();
+
     clipboardWatcher.addListener(this);
     // start watch
     clipboardWatcher.start();
@@ -32,10 +38,23 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
   void dispose() {
     super.dispose();
     clipboardWatcher.removeListener(this);
-    // stop watch
+
     clipboardWatcher.stop();
 
     _searchBarController.dispose();
+  }
+
+  void _onSearchBarChange() {
+    if (_searchBarController.text.isEmpty) {
+      setState(() {
+        filteredClipboardData = clipboardService.getClipboardData();
+      });
+    } else {
+      setState(() {
+        filteredClipboardData = clipboardService
+            .getFilteredClipboardData(_searchBarController.text);
+      });
+    }
   }
 
   void _getClipboardFirstValue() async {
@@ -49,7 +68,19 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
 
   void removeClipboardItem(ClipboardData data) {
     clipboardService.removeFromClipboardData(data);
+
     setState(() {});
+  }
+
+  void clearClipboardData() {
+    clipboardService.clearClipboardData();
+    setState(() {});
+  }
+
+  void copyToClipboard(ClipboardData data) {
+    clipboardService.copyToClipboard(data);
+    _scrollController.animateTo(0.0,
+        duration: Duration(milliseconds: 300), curve: Curves.decelerate);
   }
 
   @override
@@ -65,42 +96,63 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
     clipboardService.addToClipboardData(newClipboardData);
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(121, 48, 48, 48),
+      backgroundColor: const Color.fromARGB(121, 48, 48, 48),
       body: Column(children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
+        Padding(
+          padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                  child: KeyboardListener(
+                focusNode: FocusNode(),
+                onKeyEvent: (e) {
+                  if (e.logicalKey == LogicalKeyboardKey.enter &&
+                      _searchBarController.text == '!clear') {
+                    clearClipboardData();
+                    _searchBarController.clear();
+                  }
+                },
                 child: TextField(
-              controller: _searchBarController,
-              style: TextStyle(color: Colors.grey[300], fontSize: 25),
-              decoration: InputDecoration(
-                  border: InputBorder.none,
-                  prefixIcon: Padding(
-                      padding: EdgeInsets.only(top: 8.5),
-                      child:
-                          Icon(CupertinoIcons.search, color: Colors.grey[300])),
-                  hintText: 'Search in notes',
-                  hintStyle: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 25,
-                      fontWeight: FontWeight.w400)),
-            ))
-          ],
+                  controller: _searchBarController,
+                  style: TextStyle(color: Colors.grey[300], fontSize: 25),
+                  decoration: InputDecoration(
+                      border: InputBorder.none,
+                      prefixIcon: Padding(
+                          padding: const EdgeInsets.only(top: 8.5),
+                          child: Icon(CupertinoIcons.search,
+                              color: Colors.grey[300])),
+                      hintText: 'Search in notes',
+                      hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 25,
+                          fontWeight: FontWeight.w400)),
+                ),
+              ))
+            ],
+          ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Expanded(
           child: ListView.builder(
-            itemCount: clipboardService.getClipboardData().length,
+            controller: _scrollController,
+            itemCount: filteredClipboardData.length,
             itemBuilder: (context, index) {
-              ClipboardData data = clipboardService.getClipboardData()[index];
-              return ClipboardItem(
-                text: data.text!,
-                removeClipboardItem: () {
-                  removeClipboardItem(data);
-                },
+              ClipboardData data =
+                  filteredClipboardData.reversed.toList()[index];
+              return Listener(
+                child: ClipboardItem(
+                  text: data.text!,
+                  removeClipboardItem: () {
+                    removeClipboardItem(data);
+                  },
+                  copyToClipboard: () {
+                    copyToClipboard(data);
+                  },
+                ),
               );
             },
           ),
