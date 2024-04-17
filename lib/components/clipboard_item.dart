@@ -2,61 +2,156 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class ClipboardItem extends StatelessWidget {
+class ClipboardItem extends StatefulWidget {
+  const ClipboardItem(
+      {super.key,
+      required this.text,
+      required this.removeClipboardItem,
+      required this.copyToClipboard});
+
+  final void Function() copyToClipboard;
+  final void Function() removeClipboardItem;
   final String text;
 
-  void Function() removeClipboardItem;
-  ClipboardItem(
-      {super.key, required this.text, required this.removeClipboardItem});
+  @override
+  State<ClipboardItem> createState() => _ClipboardItemState();
+}
+
+class _ClipboardItemState extends State<ClipboardItem> {
+  bool _isCopied = false;
+  bool _isExpanded = false;
+  bool _isExpandable = false;
+  bool _isHovering = false;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
-          child: Container(
-              color: Colors.grey[800],
-              padding: EdgeInsets.all(15),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
+          child: MouseRegion(
+            onEnter: (_) {
+              setState(() {
+                _isHovering = true;
+              });
+            },
+            onExit: (_) {
+              setState(() {
+                _isHovering = false;
+              });
+            },
+            child: Container(
+                decoration: BoxDecoration(
+                    color: _isCopied ? Colors.grey[900] : Colors.transparent,
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey[900]!),
+                    )),
+                padding: const EdgeInsets.all(15),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    children: [
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            text,
-                            style: TextStyle(
-                                color: Colors.grey[300], fontSize: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AnimatedCrossFade(
+                                  firstChild: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final TextPainter textPainter =
+                                          TextPainter(
+                                        text: TextSpan(
+                                            text: widget.text,
+                                            style: TextStyle(fontSize: 12)),
+                                        maxLines: 3,
+                                        textDirection: TextDirection.ltr,
+                                      )..layout(maxWidth: constraints.maxWidth);
+
+                                      if (textPainter.didExceedMaxLines) {
+                                        _isExpandable = true;
+                                      } else {
+                                        _isExpandable = false;
+                                      }
+
+                                      return Text(
+                                        maxLines: _isExpanded ? 10 : 3,
+                                        widget.text,
+                                        style: TextStyle(
+                                            color: Colors.grey[300],
+                                            fontSize: 12),
+                                        overflow: TextOverflow.fade,
+                                      );
+                                    },
+                                  ),
+                                  secondChild: Text(
+                                    widget.text,
+                                    style: TextStyle(
+                                        color: Colors.grey[300], fontSize: 12),
+                                  ),
+                                  crossFadeState: _isExpanded
+                                      ? CrossFadeState.showSecond
+                                      : CrossFadeState.showFirst,
+                                  duration: const Duration(milliseconds: 300),
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 30),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      widget.removeClipboardItem();
+                                    },
+                                    icon: Icon(CupertinoIcons.delete,
+                                        color: Colors.grey[300]),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  IconButton(
+                                      onPressed: () {
+                                        widget.copyToClipboard();
+                                      },
+                                      icon: Icon(Icons.copy,
+                                          color: Colors.grey[300])),
+                                ],
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    Column(
-                      children: [
-                        Row(
-                          children: [
-                            IconButton(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: _isHovering ? 1.0 : 0.0,
+                            child: IconButton(
                               onPressed: () {
-                                removeClipboardItem();
+                                setState(() {
+                                  _isExpanded = !_isExpanded;
+                                });
                               },
-                              icon: Icon(CupertinoIcons.delete,
-                                  color: Colors.grey[300]),
+                              hoverColor:
+                                  _isExpandable ? null : Colors.transparent,
+                              icon: _isExpanded
+                                  ? const Icon(Icons.expand_less)
+                                  : const Icon(Icons.expand_more),
+                              color: _isExpandable
+                                  ? Colors.grey[600]
+                                  : Colors.transparent,
                             ),
-                            const SizedBox(width: 20),
-                            IconButton(
-                                onPressed: () {},
-                                icon:
-                                    Icon(Icons.copy, color: Colors.grey[300])),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              )),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                )),
+          ),
         ),
       ],
     );

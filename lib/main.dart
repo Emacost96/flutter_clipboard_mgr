@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_clipboard_mgr/pages/home_page.dart';
-import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  WindowOptions windowOptions = WindowOptions(
+  const WindowOptions windowOptions = WindowOptions(
       size: Size(800, 500),
       maximumSize: Size(800, 500),
       minimumSize: Size(800, 500),
@@ -27,7 +26,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-        debugShowCheckedModeBanner: false, home: HomePage());
+    return MaterialApp(debugShowCheckedModeBanner: false, home: HomePage());
   }
 }
