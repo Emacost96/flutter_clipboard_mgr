@@ -18,12 +18,12 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
   late ScrollController _scrollController;
   String clipboardLatestValue = '';
   ClipboardService clipboardService = ClipboardService();
-  List<ClipboardData> filteredClipboardData = [];
+  List<ExtendedClipboardData> filteredClipboardData = [];
+  bool isInternalCopy = false;
 
   @override
   void initState() {
     super.initState();
-    _getClipboardFirstValue();
     _searchBarController = TextEditingController();
     filteredClipboardData = clipboardService.getClipboardData();
     _searchBarController.addListener(_onSearchBarChange);
@@ -57,16 +57,7 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
     }
   }
 
-  void _getClipboardFirstValue() async {
-    String? data = await clipboardService.getCurrentClipboardData();
-    setState(() {
-      clipboardLatestValue = data?.toString() ?? '';
-      clipboardService
-          .addToClipboardData(ClipboardData(text: clipboardLatestValue));
-    });
-  }
-
-  void removeClipboardItem(ClipboardData data) {
+  void removeClipboardItem(ExtendedClipboardData data) {
     clipboardService.removeFromClipboardData(data);
 
     setState(() {});
@@ -77,20 +68,22 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
     setState(() {});
   }
 
-  void copyToClipboard(ClipboardData data) {
-    clipboardService.copyToClipboard(data);
+  Future<void> copyToClipboard(ExtendedClipboardData data) async {
+    await clipboardService.copyToClipboard(data);
     _scrollController.animateTo(0.0,
         duration: Duration(milliseconds: 300), curve: Curves.decelerate);
+    setState(() {});
   }
 
   @override
   void onClipboardChanged() async {
-    ClipboardData? newClipboardData =
-        await Clipboard.getData(Clipboard.kTextPlain);
+    ExtendedClipboardData? newClipboardData =
+        await clipboardService.getCurrentClipboardData();
 
     setState(() {
-      clipboardLatestValue = newClipboardData?.text ?? '';
+      clipboardLatestValue = newClipboardData?.clipboardData.text ?? '';
     });
+
     if (newClipboardData == null) return;
 
     clipboardService.addToClipboardData(newClipboardData);
@@ -141,11 +134,12 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
             controller: _scrollController,
             itemCount: filteredClipboardData.length,
             itemBuilder: (context, index) {
-              ClipboardData data =
+              ExtendedClipboardData data =
                   filteredClipboardData.reversed.toList()[index];
               return Listener(
                 child: ClipboardItem(
-                  text: data.text!,
+                  image: data.image,
+                  text: data.clipboardData.text!,
                   removeClipboardItem: () {
                     removeClipboardItem(data);
                   },

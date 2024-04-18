@@ -1,3 +1,6 @@
+import 'dart:ffi';
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -7,11 +10,13 @@ class ClipboardItem extends StatefulWidget {
       {super.key,
       required this.text,
       required this.removeClipboardItem,
-      required this.copyToClipboard});
+      required this.copyToClipboard,
+      this.image});
 
   final void Function() copyToClipboard;
   final void Function() removeClipboardItem;
   final String text;
+  final Uint8List? image;
 
   @override
   State<ClipboardItem> createState() => _ClipboardItemState();
@@ -57,44 +62,53 @@ class _ClipboardItemState extends State<ClipboardItem> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                AnimatedCrossFade(
-                                  firstChild: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final TextPainter textPainter =
-                                          TextPainter(
-                                        text: TextSpan(
-                                            text: widget.text,
-                                            style: TextStyle(fontSize: 12)),
-                                        maxLines: 3,
-                                        textDirection: TextDirection.ltr,
-                                      )..layout(maxWidth: constraints.maxWidth);
+                                if (widget.image != null &&
+                                    widget.image!.isNotEmpty)
+                                  Image.memory(
+                                    widget.image!,
+                                    width: 100,
+                                  )
+                                else
+                                  AnimatedCrossFade(
+                                    firstChild: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final TextPainter textPainter =
+                                            TextPainter(
+                                          text: TextSpan(
+                                              text: widget.text,
+                                              style: TextStyle(fontSize: 12)),
+                                          maxLines: 3,
+                                          textDirection: TextDirection.ltr,
+                                        )..layout(
+                                                maxWidth: constraints.maxWidth);
 
-                                      if (textPainter.didExceedMaxLines) {
-                                        _isExpandable = true;
-                                      } else {
-                                        _isExpandable = false;
-                                      }
+                                        if (textPainter.didExceedMaxLines) {
+                                          _isExpandable = true;
+                                        } else {
+                                          _isExpandable = false;
+                                        }
 
-                                      return Text(
-                                        maxLines: _isExpanded ? 10 : 3,
-                                        widget.text,
-                                        style: TextStyle(
-                                            color: Colors.grey[300],
-                                            fontSize: 12),
-                                        overflow: TextOverflow.fade,
-                                      );
-                                    },
-                                  ),
-                                  secondChild: Text(
-                                    widget.text,
-                                    style: TextStyle(
-                                        color: Colors.grey[300], fontSize: 12),
-                                  ),
-                                  crossFadeState: _isExpanded
-                                      ? CrossFadeState.showSecond
-                                      : CrossFadeState.showFirst,
-                                  duration: const Duration(milliseconds: 300),
-                                )
+                                        return Text(
+                                          maxLines: _isExpanded ? 10 : 3,
+                                          widget.text,
+                                          style: TextStyle(
+                                              color: Colors.grey[300],
+                                              fontSize: 12),
+                                          overflow: TextOverflow.fade,
+                                        );
+                                      },
+                                    ),
+                                    secondChild: Text(
+                                      widget.text,
+                                      style: TextStyle(
+                                          color: Colors.grey[300],
+                                          fontSize: 12),
+                                    ),
+                                    crossFadeState: _isExpanded
+                                        ? CrossFadeState.showSecond
+                                        : CrossFadeState.showFirst,
+                                    duration: const Duration(milliseconds: 300),
+                                  )
                               ],
                             ),
                           ),
