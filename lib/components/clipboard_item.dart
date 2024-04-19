@@ -46,7 +46,7 @@ class _ClipboardItemState extends State<ClipboardItem> {
             },
             child: Container(
                 decoration: BoxDecoration(
-                    color: _isCopied ? Colors.grey[900] : Colors.transparent,
+                    color: _isHovering ? Colors.grey[900] : Colors.transparent,
                     border: Border(
                       bottom: BorderSide(color: Colors.grey[900]!),
                     )),
