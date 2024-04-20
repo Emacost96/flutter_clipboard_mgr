@@ -1,9 +1,6 @@
-import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
 import 'package:link_preview_generator/link_preview_generator.dart';
 import 'package:super_clipboard/super_clipboard.dart';
@@ -30,7 +27,6 @@ class ClipboardItem extends StatefulWidget {
 class _ClipboardItemState extends State<ClipboardItem> {
   ClipboardService clipboardService = ClipboardService();
 
-  bool _isCopied = false;
   bool _isExpanded = false;
   bool _isExpandable = false;
   bool _isHovering = false;
@@ -99,20 +95,8 @@ class _ClipboardItemState extends State<ClipboardItem> {
                                     width: 100,
                                   )
                                 else if (widget.uri != null)
-                                  LinkPreviewGenerator(
-                                    key: Key(widget.uri!.uri.toString()),
-                                    placeholderWidget: Text(
-                                      'Loading...',
-                                      style: TextStyle(color: Colors.grey[300]),
-                                    ),
-                                    backgroundColor: Colors.black,
-                                    link: widget.uri!.uri.toString(),
-                                    linkPreviewStyle: LinkPreviewStyle.small,
-                                    showGraphic: true,
-                                    removeElevation: true,
-                                    errorImage: 'assets/images/link.jpeg',
-                                    errorBody: 'Click to open link',
-                                  )
+                                  clipboardService.getLinkPreviewGenerator(
+                                      widget.uri!.uri.toString())
                                 else
                                   AnimatedCrossFade(
                                     firstChild: LayoutBuilder(
@@ -121,7 +105,8 @@ class _ClipboardItemState extends State<ClipboardItem> {
                                             TextPainter(
                                           text: TextSpan(
                                               text: widget.text,
-                                              style: TextStyle(fontSize: 12)),
+                                              style: const TextStyle(
+                                                  fontSize: 12)),
                                           maxLines: 3,
                                           textDirection: TextDirection.ltr,
                                         )..layout(

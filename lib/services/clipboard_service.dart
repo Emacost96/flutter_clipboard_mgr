@@ -140,16 +140,19 @@ class ClipboardService {
       return _linkPreviewCache[url]!;
     } else {
       final generator = LinkPreviewGenerator(
+        key: Key(url),
         link: url,
         backgroundColor: Colors.black,
         removeElevation: true,
-        errorImage: 'assets/images/link.jpeg',
+        errorImage:
+            'https://cdn.icon-icons.com/icons2/2348/PNG/512/link_icon_142996.png',
         errorBody: 'Click to open link',
         linkPreviewStyle: LinkPreviewStyle.small,
         placeholderWidget: Text(
           'Loading...',
           style: TextStyle(color: Colors.grey[300]),
         ),
+        borderRadius: 6,
       );
       _linkPreviewCache[url] = generator;
       return generator;
