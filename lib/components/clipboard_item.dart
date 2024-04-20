@@ -1,9 +1,12 @@
 import 'dart:ffi';
 import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
+import 'package:link_preview_generator/link_preview_generator.dart';
+import 'package:super_clipboard/super_clipboard.dart';
 
 class ClipboardItem extends StatefulWidget {
   const ClipboardItem(
@@ -11,18 +14,22 @@ class ClipboardItem extends StatefulWidget {
       required this.text,
       required this.removeClipboardItem,
       required this.copyToClipboard,
-      this.image});
+      this.image,
+      this.uri});
 
   final void Function() copyToClipboard;
   final void Function() removeClipboardItem;
   final String text;
   final Uint8List? image;
+  final NamedUri? uri;
 
   @override
   State<ClipboardItem> createState() => _ClipboardItemState();
 }
 
 class _ClipboardItemState extends State<ClipboardItem> {
+  ClipboardService clipboardService = ClipboardService();
+
   bool _isCopied = false;
   bool _isExpanded = false;
   bool _isExpandable = false;
@@ -58,6 +65,29 @@ class _ClipboardItemState extends State<ClipboardItem> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Stack(
+                            children: [
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 200),
+                                opacity: _isHovering ? 1.0 : 0.0,
+                                child: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _isExpanded = !_isExpanded;
+                                    });
+                                  },
+                                  hoverColor:
+                                      _isExpandable ? null : Colors.transparent,
+                                  icon: _isExpanded
+                                      ? const Icon(Icons.expand_less)
+                                      : const Icon(Icons.expand_more),
+                                  color: _isExpandable
+                                      ? Colors.grey[600]
+                                      : Colors.transparent,
+                                ),
+                              )
+                            ],
+                          ),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,6 +97,21 @@ class _ClipboardItemState extends State<ClipboardItem> {
                                   Image.memory(
                                     widget.image!,
                                     width: 100,
+                                  )
+                                else if (widget.uri != null)
+                                  LinkPreviewGenerator(
+                                    key: Key(widget.uri!.uri.toString()),
+                                    placeholderWidget: Text(
+                                      'Loading...',
+                                      style: TextStyle(color: Colors.grey[300]),
+                                    ),
+                                    backgroundColor: Colors.black,
+                                    link: widget.uri!.uri.toString(),
+                                    linkPreviewStyle: LinkPreviewStyle.small,
+                                    showGraphic: true,
+                                    removeElevation: true,
+                                    errorImage: 'assets/images/link.jpeg',
+                                    errorBody: 'Click to open link',
                                   )
                                 else
                                   AnimatedCrossFade(
@@ -138,8 +183,7 @@ class _ClipboardItemState extends State<ClipboardItem> {
                           ),
                         ],
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Stack(
                         children: [
                           AnimatedOpacity(
                             duration: const Duration(milliseconds: 200),

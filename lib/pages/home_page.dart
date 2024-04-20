@@ -155,6 +155,7 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
                           child: ClipboardItem(
                             image: data.image,
                             text: data.clipboardData.text!,
+                            uri: data.uri,
                             removeClipboardItem: () {
                               removeClipboardItem(data);
                             },
