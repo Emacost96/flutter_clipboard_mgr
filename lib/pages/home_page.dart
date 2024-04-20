@@ -130,26 +130,41 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
         ),
         const SizedBox(height: 20),
         Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: filteredClipboardData.length,
-            itemBuilder: (context, index) {
-              ExtendedClipboardData data =
-                  filteredClipboardData.reversed.toList()[index];
-              return Listener(
-                child: ClipboardItem(
-                  image: data.image,
-                  text: data.clipboardData.text!,
-                  removeClipboardItem: () {
-                    removeClipboardItem(data);
-                  },
-                  copyToClipboard: () {
-                    copyToClipboard(data);
-                  },
-                ),
-              );
-            },
-          ),
+          child: filteredClipboardData.isEmpty &&
+                  _searchBarController.text.isEmpty
+              ? Center(
+                  child: Text(
+                    'No clipboard data',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                  ),
+                )
+              : filteredClipboardData.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No results for your search',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      itemCount: filteredClipboardData.length,
+                      itemBuilder: (context, index) {
+                        ExtendedClipboardData data =
+                            filteredClipboardData.reversed.toList()[index];
+                        return Listener(
+                          child: ClipboardItem(
+                            image: data.image,
+                            text: data.clipboardData.text!,
+                            removeClipboardItem: () {
+                              removeClipboardItem(data);
+                            },
+                            copyToClipboard: () {
+                              copyToClipboard(data);
+                            },
+                          ),
+                        );
+                      },
+                    ),
         )
       ]),
     );
