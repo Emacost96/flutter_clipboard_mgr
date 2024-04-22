@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_clipboard_mgr/pages/home_page.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
-
+  await Hive.openBox('clipboard_data');
   const WindowOptions windowOptions = WindowOptions(
       size: Size(800, 500),
       maximumSize: Size(800, 500),

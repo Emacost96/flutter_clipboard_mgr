@@ -133,16 +133,32 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
           child: filteredClipboardData.isEmpty &&
                   _searchBarController.text.isEmpty
               ? Center(
-                  child: Text(
-                    'No clipboard data',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.paperclip,
+                          size: 50, color: Colors.grey[500]),
+                      SizedBox(height: 30),
+                      Text(
+                        'No clipboard data',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                      ),
+                    ],
                   ),
                 )
               : filteredClipboardData.isEmpty
                   ? Center(
-                      child: Text(
-                        'No results for your search',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off,
+                              size: 50, color: Colors.grey[500]),
+                          Text(
+                            'No results for your search',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 20),
+                          ),
+                        ],
                       ),
                     )
                   : ListView.builder(

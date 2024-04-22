@@ -144,8 +144,6 @@ class ClipboardService {
         link: url,
         backgroundColor: Colors.black,
         removeElevation: true,
-        errorImage:
-            'https://cdn.icon-icons.com/icons2/2348/PNG/512/link_icon_142996.png',
         errorBody: 'Click to open link',
         linkPreviewStyle: LinkPreviewStyle.small,
         placeholderWidget: Text(
