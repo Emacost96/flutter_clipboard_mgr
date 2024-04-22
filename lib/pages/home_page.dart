@@ -153,6 +153,7 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
                         children: [
                           Icon(Icons.search_off,
                               size: 50, color: Colors.grey[500]),
+                          SizedBox(height: 30),
                           Text(
                             'No results for your search',
                             style: TextStyle(

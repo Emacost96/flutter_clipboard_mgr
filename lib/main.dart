@@ -5,7 +5,6 @@ import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.openBox('clipboard_data');
   const WindowOptions windowOptions = WindowOptions(
       size: Size(800, 500),
       maximumSize: Size(800, 500),
