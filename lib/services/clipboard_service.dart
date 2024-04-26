@@ -1,10 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:link_preview_generator/link_preview_generator.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
 /// A service for managing clipboard data.
 class ClipboardService {
   // Clipboard data
   List<ExtendedClipboardData> _clipboardData = [];
+
+  final Map<String, LinkPreviewGenerator> _linkPreviewCache = {};
 
   /// Get the current clipboard data.
   List<ExtendedClipboardData> get clipboardData => _clipboardData;
@@ -21,6 +25,7 @@ class ClipboardService {
       date: DateTime.now(),
       image: Uint8List(0),
       format: '',
+      uri: NamedUri(Uri()),
     );
 
     if (clipboard == null) {
@@ -61,6 +66,11 @@ class ClipboardService {
     if (reader.canProvide(Formats.plainText)) {
       final text = await reader.readValue(Formats.plainText);
       data.clipboardData = ClipboardData(text: text ?? '');
+    }
+
+    if (reader.canProvide(Formats.uri)) {
+      final uri = await reader.readValue(Formats.uri);
+      data.uri = uri;
     }
     return data;
   }
@@ -124,6 +134,28 @@ class ClipboardService {
             .contains(query.toLowerCase()))
         .toList();
   }
+
+  LinkPreviewGenerator getLinkPreviewGenerator(String url) {
+    if (_linkPreviewCache.containsKey(url)) {
+      return _linkPreviewCache[url]!;
+    } else {
+      final generator = LinkPreviewGenerator(
+        key: Key(url),
+        link: url,
+        backgroundColor: Colors.black,
+        removeElevation: true,
+        errorBody: 'Click to open link',
+        linkPreviewStyle: LinkPreviewStyle.small,
+        placeholderWidget: Text(
+          'Loading...',
+          style: TextStyle(color: Colors.grey[300]),
+        ),
+        borderRadius: 6,
+      );
+      _linkPreviewCache[url] = generator;
+      return generator;
+    }
+  }
 }
 
 /// Represents extended clipboard data.
@@ -132,6 +164,7 @@ class ExtendedClipboardData {
     required this.clipboardData,
     this.date,
     this.image,
+    this.uri,
     required this.format,
   });
 
@@ -145,4 +178,6 @@ class ExtendedClipboardData {
 
   /// The image data, if available.
   Uint8List? image;
+
+  NamedUri? uri;
 }

@@ -6,19 +6,21 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  const WindowOptions windowOptions = WindowOptions(
+  WindowOptions windowOptions = const WindowOptions(
       size: Size(800, 500),
       maximumSize: Size(800, 500),
       minimumSize: Size(800, 500),
+      skipTaskbar: true,
       titleBarStyle: TitleBarStyle.hidden,
-      windowButtonVisibility: false,
       backgroundColor: Colors.transparent,
-      skipTaskbar: false);
-  runApp(const MyApp());
+      windowButtonVisibility: false);
+
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
   });
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
