@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_clipboard_mgr/pages/home_page.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const WindowOptions windowOptions = WindowOptions(
+  await windowManager.ensureInitialized();
+
+  WindowOptions windowOptions = const WindowOptions(
       size: Size(800, 500),
       maximumSize: Size(800, 500),
       minimumSize: Size(800, 500),
+      skipTaskbar: true,
       titleBarStyle: TitleBarStyle.hidden,
-      windowButtonVisibility: false,
       backgroundColor: Colors.transparent,
-      skipTaskbar: false);
-  runApp(const MyApp());
+      windowButtonVisibility: false);
+
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
   });
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
