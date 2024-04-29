@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_clipboard_mgr/components/clipboard_item.dart';
 import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
+import 'package:super_clipboard/super_clipboard.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key});
@@ -77,6 +78,10 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
 
   @override
   void onClipboardChanged() async {
+    if (isInternalCopy) {
+      isInternalCopy = false;
+      return;
+    }
     ExtendedClipboardData? newClipboardData =
         await clipboardService.getCurrentClipboardData();
 
@@ -172,12 +177,17 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
                           child: ClipboardItem(
                             image: data.image,
                             text: data.clipboardData.text!,
-                            uri: data.uri,
+                            uri: data.uri != null &&
+                                    data.uri!.uri.toString().startsWith('http')
+                                ? data.uri
+                                : null,
+                            copiedCount: data.copiedCount,
                             removeClipboardItem: () {
                               removeClipboardItem(data);
                             },
                             copyToClipboard: () {
                               copyToClipboard(data);
+                              isInternalCopy = true;
                             },
                           ),
                         );
