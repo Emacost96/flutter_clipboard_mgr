@@ -6,7 +6,7 @@ import 'package:super_clipboard/super_clipboard.dart';
 /// A service for managing clipboard data.
 class ClipboardService {
   // Clipboard data
-  List<ExtendedClipboardData> _clipboardData = [];
+  final List<ExtendedClipboardData> _clipboardData = [];
 
   final Map<String, LinkPreviewGenerator> _linkPreviewCache = {};
 
@@ -26,6 +26,7 @@ class ClipboardService {
       image: Uint8List(0),
       format: '',
       uri: NamedUri(Uri()),
+      copiedCount: 1,
     );
 
     if (clipboard == null) {
@@ -72,6 +73,8 @@ class ClipboardService {
       final uri = await reader.readValue(Formats.uri);
       data.uri = uri;
     }
+
+    data.copiedCount = 1;
     return data;
   }
 
@@ -107,9 +110,13 @@ class ClipboardService {
   Future<void> copyToClipboard(ExtendedClipboardData data) async {
     final clipboard = SystemClipboard.instance;
 
-    if (clipboard == null) {
+    if (clipboard == null || _clipboardData.last == data) {
       return; // Clipboard API is not supported on this platform.
     }
+    data.copiedCount++;
+
+    removeFromClipboardData(data);
+    _clipboardData.add(data);
 
     final item = DataWriterItem();
     item.add(Formats.plainText(data.clipboardData.text!));
@@ -121,7 +128,6 @@ class ClipboardService {
       item.add(Formats.webp(data.image!));
     }
     await clipboard.write([item]);
-    removeFromClipboardData(data);
   }
 
   /// Get filtered clipboard data based on a query.
@@ -165,11 +171,14 @@ class ExtendedClipboardData {
     this.date,
     this.image,
     this.uri,
+    this.copiedCount = 0,
     required this.format,
   });
 
   /// The clipboard data.
   ClipboardData clipboardData;
+
+  int copiedCount = 0;
 
   /// The date and time when the clipboard data was captured.
   DateTime? date;

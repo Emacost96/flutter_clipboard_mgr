@@ -11,6 +11,7 @@ class ClipboardItem extends StatefulWidget {
       required this.removeClipboardItem,
       required this.copyToClipboard,
       this.image,
+      this.copiedCount,
       this.uri});
 
   final void Function() copyToClipboard;
@@ -18,6 +19,7 @@ class ClipboardItem extends StatefulWidget {
   final String text;
   final Uint8List? image;
   final NamedUri? uri;
+  final int? copiedCount;
 
   @override
   State<ClipboardItem> createState() => _ClipboardItemState();
@@ -57,6 +59,18 @@ class _ClipboardItemState extends State<ClipboardItem> {
                   const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
               child: Container(
                   decoration: BoxDecoration(
+                    border: Border(
+                        left: widget.copiedCount! > 3 && widget.copiedCount! < 5
+                            ? const BorderSide(
+                                color: Color.fromARGB(255, 248, 198, 48),
+                                width: 10,
+                              )
+                            : widget.copiedCount! >= 5
+                                ? const BorderSide(
+                                    color: Color.fromARGB(255, 249, 87, 87),
+                                    width: 9,
+                                  )
+                                : BorderSide.none),
                     borderRadius: BorderRadius.circular(10),
                     color: _isHovering ? Colors.grey[700] : Colors.grey[900],
                   ),
