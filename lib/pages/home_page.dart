@@ -3,29 +3,34 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_clipboard_mgr/classes/extended_clipboard_data.dart';
 import 'package:flutter_clipboard_mgr/components/clipboard_item.dart';
 import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
-import 'package:super_clipboard/super_clipboard.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with ClipboardListener {
   late TextEditingController _searchBarController;
+
   late ScrollController _scrollController;
+
   String clipboardLatestValue = '';
+
   ClipboardService clipboardService = ClipboardService();
+
   List<ExtendedClipboardData> filteredClipboardData = [];
+
   bool isInternalCopy = false;
 
   @override
   void initState() {
     super.initState();
     _searchBarController = TextEditingController();
+    clipboardService.loadClipboardData();
     filteredClipboardData = clipboardService.getClipboardData();
     _searchBarController.addListener(_onSearchBarChange);
     _scrollController = ScrollController();
@@ -36,7 +41,7 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     super.dispose();
     clipboardWatcher.removeListener(this);
 
@@ -177,10 +182,10 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
                           child: ClipboardItem(
                             image: data.image,
                             text: data.clipboardData.text!,
-                            uri: data.uri != null &&
-                                    data.uri!.uri.toString().startsWith('http')
-                                ? data.uri
-                                : null,
+                            url:
+                                data.url != null && data.url!.startsWith('http')
+                                    ? data.url
+                                    : null,
                             copiedCount: data.copiedCount,
                             removeClipboardItem: () {
                               removeClipboardItem(data);
