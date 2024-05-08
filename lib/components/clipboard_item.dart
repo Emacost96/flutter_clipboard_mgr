@@ -12,13 +12,13 @@ class ClipboardItem extends StatefulWidget {
       required this.copyToClipboard,
       this.image,
       this.copiedCount,
-      this.uri});
+      this.url});
 
   final void Function() copyToClipboard;
   final void Function() removeClipboardItem;
   final String text;
   final Uint8List? image;
-  final NamedUri? uri;
+  final String? url;
   final int? copiedCount;
 
   @override
@@ -92,9 +92,9 @@ class _ClipboardItemState extends State<ClipboardItem> {
                                       widget.image!,
                                       width: 100,
                                     )
-                                  else if (widget.uri != null)
-                                    clipboardService.getLinkPreviewGenerator(
-                                        widget.uri!.uri.toString())
+                                  else if (widget.url != null)
+                                    clipboardService
+                                        .getLinkPreviewGenerator(widget.url!)
                                   else
                                     AnimatedCrossFade(
                                       firstChild: LayoutBuilder(
