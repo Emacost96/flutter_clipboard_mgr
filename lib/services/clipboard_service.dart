@@ -1,13 +1,36 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_clipboard_mgr/classes/extended_clipboard_data.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:link_preview_generator/link_preview_generator.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
 /// A service for managing clipboard data.
 class ClipboardService {
+  final _clipboardBox = Hive.box('clipboardBox');
+
+  getClipboardBox() {
+    return _clipboardBox;
+  }
+
+  closeClipboardBox() {
+    _clipboardBox.close();
+  }
+
   // Clipboard data
   List<ExtendedClipboardData> _clipboardData = [];
 
+  final Map<String, LinkPreviewGenerator> _linkPreviewCache = {};
+
   /// Get the current clipboard data.
-  List<ExtendedClipboardData> get clipboardData => _clipboardData;
+
+  loadClipboardData() {
+    if (!_clipboardBox.isEmpty) {
+      _clipboardBox.values.forEach((element) {
+        _clipboardData.add(element);
+      });
+    }
+  }
 
   /// Get the current clipboard data asynchronously.
   ///
@@ -21,6 +44,8 @@ class ClipboardService {
       date: DateTime.now(),
       image: Uint8List(0),
       format: '',
+      url: '',
+      copiedCount: 1,
     );
 
     if (clipboard == null) {
@@ -62,6 +87,13 @@ class ClipboardService {
       final text = await reader.readValue(Formats.plainText);
       data.clipboardData = ClipboardData(text: text ?? '');
     }
+
+    if (reader.canProvide(Formats.uri)) {
+      final uri = await reader.readValue(Formats.uri);
+      data.url = uri?.uri.toString();
+    }
+
+    data.copiedCount = 1;
     return data;
   }
 
@@ -77,18 +109,21 @@ class ClipboardService {
   void addToClipboardData(ExtendedClipboardData data) {
     // Add to clipboard data
     _clipboardData.add(data);
+    _clipboardBox.put('key${data.date}', data);
   }
 
   /// Remove a [ExtendedClipboardData] object from the clipboard data.
   void removeFromClipboardData(ExtendedClipboardData data) {
     // Remove from clipboard data
     _clipboardData.remove(data);
+    _clipboardBox.delete('key${data.date}');
   }
 
   /// Clear the clipboard data.
   void clearClipboardData() {
     // Clear clipboard data
     _clipboardData.clear();
+    _clipboardBox.clear();
   }
 
   /// Copy text to clipboard.
@@ -97,9 +132,13 @@ class ClipboardService {
   Future<void> copyToClipboard(ExtendedClipboardData data) async {
     final clipboard = SystemClipboard.instance;
 
-    if (clipboard == null) {
+    if (clipboard == null || _clipboardData.last == data) {
       return; // Clipboard API is not supported on this platform.
     }
+    data.copiedCount++;
+
+    removeFromClipboardData(data);
+    _clipboardData.add(data);
 
     final item = DataWriterItem();
     item.add(Formats.plainText(data.clipboardData.text!));
@@ -111,7 +150,6 @@ class ClipboardService {
       item.add(Formats.webp(data.image!));
     }
     await clipboard.write([item]);
-    removeFromClipboardData(data);
   }
 
   /// Get filtered clipboard data based on a query.
@@ -124,25 +162,28 @@ class ClipboardService {
             .contains(query.toLowerCase()))
         .toList();
   }
-}
 
-/// Represents extended clipboard data.
-class ExtendedClipboardData {
-  ExtendedClipboardData({
-    required this.clipboardData,
-    this.date,
-    this.image,
-    required this.format,
-  });
-
-  /// The clipboard data.
-  ClipboardData clipboardData;
-
-  /// The date and time when the clipboard data was captured.
-  DateTime? date;
-
-  String format;
-
-  /// The image data, if available.
-  Uint8List? image;
+  LinkPreviewGenerator getLinkPreviewGenerator(String url) {
+    if (_linkPreviewCache.containsKey(url)) {
+      return _linkPreviewCache[url]!;
+    } else {
+      final generator = LinkPreviewGenerator(
+        key: Key(url),
+        link: url,
+        backgroundColor: Colors.black,
+        removeElevation: true,
+        errorBody: 'Click to open link',
+        errorImage:
+            'https://archive.org/download/no-photo-available/no-photo-available.png',
+        linkPreviewStyle: LinkPreviewStyle.small,
+        placeholderWidget: Text(
+          'Loading...',
+          style: TextStyle(color: Colors.grey[300]),
+        ),
+        borderRadius: 6,
+      );
+      _linkPreviewCache[url] = generator;
+      return generator;
+    }
+  }
 }

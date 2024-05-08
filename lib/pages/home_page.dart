@@ -3,28 +3,34 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_clipboard_mgr/classes/extended_clipboard_data.dart';
 import 'package:flutter_clipboard_mgr/components/clipboard_item.dart';
 import 'package:flutter_clipboard_mgr/services/clipboard_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with ClipboardListener {
   late TextEditingController _searchBarController;
+
   late ScrollController _scrollController;
+
   String clipboardLatestValue = '';
+
   ClipboardService clipboardService = ClipboardService();
+
   List<ExtendedClipboardData> filteredClipboardData = [];
+
   bool isInternalCopy = false;
 
   @override
   void initState() {
     super.initState();
     _searchBarController = TextEditingController();
+    clipboardService.loadClipboardData();
     filteredClipboardData = clipboardService.getClipboardData();
     _searchBarController.addListener(_onSearchBarChange);
     _scrollController = ScrollController();
@@ -35,7 +41,7 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     super.dispose();
     clipboardWatcher.removeListener(this);
 
@@ -77,6 +83,10 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
 
   @override
   void onClipboardChanged() async {
+    if (isInternalCopy) {
+      isInternalCopy = false;
+      return;
+    }
     ExtendedClipboardData? newClipboardData =
         await clipboardService.getCurrentClipboardData();
 
@@ -133,16 +143,33 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
           child: filteredClipboardData.isEmpty &&
                   _searchBarController.text.isEmpty
               ? Center(
-                  child: Text(
-                    'No clipboard data',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.paperclip,
+                          size: 50, color: Colors.grey[500]),
+                      SizedBox(height: 30),
+                      Text(
+                        'No clipboard data',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                      ),
+                    ],
                   ),
                 )
               : filteredClipboardData.isEmpty
                   ? Center(
-                      child: Text(
-                        'No results for your search',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off,
+                              size: 50, color: Colors.grey[500]),
+                          SizedBox(height: 30),
+                          Text(
+                            'No results for your search',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 20),
+                          ),
+                        ],
                       ),
                     )
                   : ListView.builder(
@@ -155,11 +182,17 @@ class _HomePageState extends State<HomePage> with ClipboardListener {
                           child: ClipboardItem(
                             image: data.image,
                             text: data.clipboardData.text!,
+                            url:
+                                data.url != null && data.url!.startsWith('http')
+                                    ? data.url
+                                    : null,
+                            copiedCount: data.copiedCount,
                             removeClipboardItem: () {
                               removeClipboardItem(data);
                             },
                             copyToClipboard: () {
                               copyToClipboard(data);
+                              isInternalCopy = true;
                             },
                           ),
                         );
